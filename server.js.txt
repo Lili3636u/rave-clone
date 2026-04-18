@@ -12,27 +12,22 @@ const io = socketIo(server, {
     }
 });
 
-// Раздаём статические файлы
 app.use(express.static(__dirname));
 
-// Главная страница
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Хранилище комнат
 const rooms = new Map();
 
 io.on('connection', (socket) => {
-    console.log('✅ Новое подключение:', socket.id);
+    console.log('✅ Подключен:', socket.id);
     
-    // Регистрация пользователя
     socket.on('register', (data) => {
         socket.userName = data.name || 'Гость';
         socket.userId = data.userId || socket.id;
         console.log('📝 Зарегистрирован:', socket.userName);
         
-        // Отправляем список комнат
         const roomsList = Array.from(rooms.values()).map(room => ({
             id: room.id,
             name: room.name,
@@ -41,7 +36,6 @@ io.on('connection', (socket) => {
         socket.emit('rooms_list', roomsList);
     });
     
-    // Создание комнаты
     socket.on('create_room', (data) => {
         const roomId = Math.random().toString(36).substring(2, 8).toUpperCase();
         const newRoom = {
@@ -61,7 +55,6 @@ io.on('connection', (socket) => {
         console.log('📁 Создана комната:', data.name, 'ID:', roomId);
     });
     
-    // Присоединение к комнате
     socket.on('join_room', (data) => {
         const room = rooms.get(data.roomId);
         if (!room) {
@@ -69,7 +62,6 @@ io.on('connection', (socket) => {
             return;
         }
         
-        // Выход из предыдущей комнаты
         if (socket.currentRoom) {
             socket.leave(socket.currentRoom);
             const oldRoom = rooms.get(socket.currentRoom);
@@ -83,7 +75,6 @@ io.on('connection', (socket) => {
             }
         }
         
-        // Добавление в новую комнату
         if (!room.members.find(m => m.id === socket.id)) {
             room.members.push({ id: socket.id, name: socket.userName });
         }
@@ -102,7 +93,6 @@ io.on('connection', (socket) => {
         console.log('👤', socket.userName, 'присоединился к комнате:', room.name);
     });
     
-    // Выход из комнаты
     socket.on('leave_room', () => {
         if (socket.currentRoom) {
             const room = rooms.get(socket.currentRoom);
@@ -118,22 +108,18 @@ io.on('connection', (socket) => {
             socket.currentRoom = null;
             socket.emit('room_left');
             broadcastRoomsList();
-            console.log('👋', socket.userName, 'покинул комнату');
         }
     });
     
-    // Чат сообщение
     socket.on('chat_message', (data) => {
         if (socket.currentRoom) {
             io.to(socket.currentRoom).emit('chat_message', {
                 sender: socket.userName,
-                message: data.message,
-                time: new Date().toLocaleTimeString()
+                message: data.message
             });
         }
     });
     
-    // Загрузка видео
     socket.on('load_video', (data) => {
         if (socket.currentRoom) {
             const room = rooms.get(socket.currentRoom);
@@ -151,38 +137,6 @@ io.on('connection', (socket) => {
         }
     });
     
-    // Синхронизация видео (воспроизведение/пауза)
-    socket.on('video_play', (data) => {
-        if (socket.currentRoom) {
-            const room = rooms.get(socket.currentRoom);
-            if (room) {
-                room.isPlaying = true;
-                socket.to(socket.currentRoom).emit('video_play', { currentTime: data.currentTime });
-            }
-        }
-    });
-    
-    socket.on('video_pause', (data) => {
-        if (socket.currentRoom) {
-            const room = rooms.get(socket.currentRoom);
-            if (room) {
-                room.isPlaying = false;
-                socket.to(socket.currentRoom).emit('video_pause', { currentTime: data.currentTime });
-            }
-        }
-    });
-    
-    socket.on('video_seek', (data) => {
-        if (socket.currentRoom) {
-            const room = rooms.get(socket.currentRoom);
-            if (room) {
-                room.currentTime = data.currentTime;
-                socket.to(socket.currentRoom).emit('video_seek', { currentTime: data.currentTime });
-            }
-        }
-    });
-    
-    // Отключение
     socket.on('disconnect', () => {
         if (socket.currentRoom) {
             const room = rooms.get(socket.currentRoom);
@@ -212,15 +166,10 @@ function broadcastRoomsList() {
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
     console.log(`
-╔══════════════════════════════════════════════════════════════════════╗
-║                                                                      ║
-║   🎬 RAVE CLONE — СЕРВЕР ЗАПУЩЕН!                                    ║
-║                                                                      ║
-║   📡 Локальный доступ:    http://localhost:${PORT}                      ║
-║   🌍 Публичный доступ:    После деплоя на хостинг                     ║
-║                                                                      ║
-║   👥 Теперь вы можете смотреть видео с друзьями из любой точки мира!  ║
-║                                                                      ║
-╚══════════════════════════════════════════════════════════════════════╝
+╔══════════════════════════════════════════════════════════════╗
+║   🎬 RAVE CLONE — СЕРВЕР ЗАПУЩЕН!                           ║
+║   🌐 Порт: ${PORT}                                             ║
+║   🌍 Доступен из любой точки мира!                          ║
+╚══════════════════════════════════════════════════════════════╝
     `);
 });
