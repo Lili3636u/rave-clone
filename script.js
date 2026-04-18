@@ -12,9 +12,6 @@ const chatMessages = document.getElementById('chatMessages');
 const chatInput = document.getElementById('chatInput');
 const sendBtn = document.getElementById('sendBtn');
 const currentRoomName = document.getElementById('currentRoomName');
-const roomCode = document.getElementById('roomCode');
-const roomCodeContainer = document.getElementById('roomCodeContainer');
-const copyCodeBtn = document.getElementById('copyCodeBtn');
 const inviteBtn = document.getElementById('inviteBtn');
 const leaveRoomBtn = document.getElementById('leaveRoomBtn');
 const videoUrlInput = document.getElementById('videoUrlInput');
@@ -26,10 +23,6 @@ const connectionStatus = document.getElementById('connectionStatus');
 const createRoomModal = document.getElementById('createRoomModal');
 const inviteModal = document.getElementById('inviteModal');
 const toast = document.getElementById('toast');
-const menuToggle = document.getElementById('menuToggle');
-const sidebar = document.getElementById('sidebar');
-const chatToggle = document.getElementById('chatToggle');
-const chatContainer = document.getElementById('chatContainer');
 
 // Состояние
 let currentUser = {
@@ -37,8 +30,6 @@ let currentUser = {
     name: localStorage.getItem('userName') || 'Гость'
 };
 let currentRoom = null;
-let isHost = false;
-let currentVideoPlayer = null;
 
 // Сохраняем ID пользователя
 localStorage.setItem('userId', currentUser.id);
@@ -53,16 +44,13 @@ socket.emit('register', {
 // ========== Обработчики сокетов ==========
 
 socket.on('connect', () => {
-    console.log('✅ Сокет подключен');
     connectionStatus.className = 'connection-status connected';
     connectionStatus.innerHTML = '<i class="fas fa-circle"></i><span>Подключено к серверу</span>';
-    showToast('Подключено к серверу', 'success');
 });
 
 socket.on('disconnect', () => {
-    console.log('❌ Сокет отключен');
     connectionStatus.className = 'connection-status disconnected';
-    connectionStatus.innerHTML = '<i class="fas fa-circle"></i><span>Отключено от сервера</span>';
+    connectionStatus.innerHTML = '<i class="fas fa-circle"></i><span>Отключено</span>';
     showToast('Потеряно соединение с сервером', 'error');
 });
 
@@ -72,7 +60,6 @@ socket.on('rooms_list', (rooms) => {
 
 socket.on('room_created', (room) => {
     currentRoom = room;
-    isHost = true;
     updateRoomUI();
     showToast(`Комната "${room.name}" создана!`, 'success');
     closeModal(createRoomModal);
@@ -80,17 +67,15 @@ socket.on('room_created', (room) => {
 
 socket.on('room_joined', (data) => {
     currentRoom = data.room;
-    isHost = false;
     updateRoomUI();
     if (data.videoUrl) {
-        loadVideoToPlayer(data.videoUrl, data.currentTime);
+        loadVideoToPlayer(data.videoUrl);
     }
     showToast(`Вы присоединились к комнате "${data.room.name}"`, 'success');
 });
 
 socket.on('room_left', () => {
     currentRoom = null;
-    isHost = false;
     updateRoomUI();
     showToast('Вы покинули комнату', 'info');
 });
@@ -110,7 +95,7 @@ socket.on('chat_message', (data) => {
 });
 
 socket.on('video_loaded', (data) => {
-    loadVideoToPlayer(data.url, data.currentTime);
+    loadVideoToPlayer(data.url);
     addSystemMessage(`📺 Загружено новое видео`);
 });
 
@@ -147,24 +132,17 @@ function renderRoomsList(rooms) {
 
 function updateRoomUI() {
     if (currentRoom) {
-        currentRoomName.textContent = currentRoom.name;
-        roomCode.textContent = currentRoom.id;
-        roomCodeContainer.style.display = 'flex';
         noRoomMessage.style.display = 'none';
         videoFrame.style.display = 'block';
         videoControls.style.display = 'flex';
-        inviteBtn.style.display = 'flex';
         leaveRoomBtn.style.display = 'flex';
         chatInput.disabled = false;
         sendBtn.disabled = false;
         updateMemberCount();
     } else {
-        currentRoomName.textContent = '🎬 Выберите комнату';
-        roomCodeContainer.style.display = 'none';
         noRoomMessage.style.display = 'flex';
         videoFrame.style.display = 'none';
         videoControls.style.display = 'none';
-        inviteBtn.style.display = 'none';
         leaveRoomBtn.style.display = 'none';
         chatInput.disabled = true;
         sendBtn.disabled = true;
@@ -180,9 +158,8 @@ function updateMemberCount() {
         onlineUsersList.innerHTML = currentRoom.members.map(m => `
             <div class="user-item">
                 <div class="status-dot"></div>
-                <span class="user-name">${escapeHtml(m.name)}</span>
-                ${m.id === currentUser.id ? '<span class="user-badge">Вы</span>' : ''}
-                ${m.isHost ? '<span class="user-badge" style="background:#a855f7;">👑 Хост</span>' : ''}
+                <span>${escapeHtml(m.name)}</span>
+                ${m.id === currentUser.id ? '<span style="font-size:10px;margin-left:5px;">(Вы)</span>' : ''}
             </div>
         `).join('');
     }
@@ -207,19 +184,16 @@ function addSystemMessage(message) {
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-function loadVideoToPlayer(url, time = 0) {
-    let videoUrl = url;
+function loadVideoToPlayer(url) {
     let videoId = '';
-    
-    // YouTube
     const youtubeRegex = /(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
-    const youtubeMatch = url.match(youtubeRegex);
-    if (youtubeMatch) {
-        videoId = youtubeMatch[1];
-        videoUrl = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&autoplay=1&start=${Math.floor(time)}`;
+    const match = url.match(youtubeRegex);
+    if (match) {
+        videoId = match[1];
+        videoFrame.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+    } else {
+        videoFrame.src = url;
     }
-    
-    videoFrame.src = videoUrl;
 }
 
 function showToast(message, type = 'info') {
@@ -246,7 +220,6 @@ function closeModal(modal) {
 
 // ========== Обработчики событий ==========
 
-// Сохранение имени
 saveNameBtn.addEventListener('click', () => {
     const newName = userNameInput.value.trim();
     if (newName) {
@@ -254,13 +227,10 @@ saveNameBtn.addEventListener('click', () => {
         localStorage.setItem('userName', newName);
         socket.emit('register', { userId: currentUser.id, name: newName });
         showToast(`Имя изменено на ${newName}`, 'success');
-        if (currentRoom) {
-            updateMemberCount();
-        }
+        if (currentRoom) updateMemberCount();
     }
 });
 
-// Создание комнаты
 createRoomBtn.addEventListener('click', () => {
     openModal(createRoomModal);
 });
@@ -275,10 +245,9 @@ document.getElementById('confirmCreateRoom')?.addEventListener('click', () => {
     }
 });
 
-// Приглашение
-inviteBtn.addEventListener('click', () => {
+inviteBtn?.addEventListener('click', () => {
     if (currentRoom) {
-        const inviteLink = `${window.location.origin}?room=${currentRoom.id}`;
+        const inviteLink = window.location.href;
         document.getElementById('inviteLinkInput').value = inviteLink;
         document.getElementById('modalRoomCode').textContent = currentRoom.id;
         openModal(inviteModal);
@@ -292,21 +261,12 @@ document.getElementById('copyInviteBtn')?.addEventListener('click', () => {
     showToast('Ссылка скопирована!', 'success');
 });
 
-// Копирование кода комнаты
-copyCodeBtn?.addEventListener('click', () => {
-    const code = roomCode.textContent;
-    navigator.clipboard.writeText(code);
-    showToast('Код комнаты скопирован', 'success');
-});
-
-// Выход из комнаты
 leaveRoomBtn?.addEventListener('click', () => {
     if (confirm('Выйти из комнаты?')) {
         socket.emit('leave_room');
     }
 });
 
-// Чат
 sendBtn.addEventListener('click', () => {
     const message = chatInput.value.trim();
     if (message && currentRoom) {
@@ -320,7 +280,6 @@ chatInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') sendBtn.click();
 });
 
-// Загрузка видео
 loadVideoBtn.addEventListener('click', () => {
     const url = videoUrlInput.value.trim();
     if (url && currentRoom) {
@@ -328,12 +287,9 @@ loadVideoBtn.addEventListener('click', () => {
         videoUrlInput.value = '';
     } else if (!currentRoom) {
         showToast('Сначала присоединитесь к комнате', 'error');
-    } else {
-        showToast('Введите ссылку на видео', 'error');
     }
 });
 
-// Закрытие модальных окон
 document.querySelectorAll('.close-modal').forEach(el => {
     el.addEventListener('click', () => {
         closeModal(createRoomModal);
@@ -344,15 +300,6 @@ document.querySelectorAll('.close-modal').forEach(el => {
 window.addEventListener('click', (e) => {
     if (e.target === createRoomModal) closeModal(createRoomModal);
     if (e.target === inviteModal) closeModal(inviteModal);
-});
-
-// Меню на мобильных устройствах
-menuToggle?.addEventListener('click', () => {
-    sidebar?.classList.toggle('open');
-});
-
-chatToggle?.addEventListener('click', () => {
-    chatContainer?.classList.toggle('open');
 });
 
 // Параметр комнаты из URL
