@@ -136,6 +136,7 @@ function updateRoomUI() {
         videoFrame.style.display = 'block';
         videoControls.style.display = 'flex';
         leaveRoomBtn.style.display = 'flex';
+        inviteBtn.style.display = 'flex';
         chatInput.disabled = false;
         sendBtn.disabled = false;
         updateMemberCount();
@@ -144,6 +145,7 @@ function updateRoomUI() {
         videoFrame.style.display = 'none';
         videoControls.style.display = 'none';
         leaveRoomBtn.style.display = 'none';
+        inviteBtn.style.display = 'none';
         chatInput.disabled = true;
         sendBtn.disabled = true;
         onlineUsersList.innerHTML = '';
