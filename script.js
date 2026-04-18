@@ -185,14 +185,24 @@ function addSystemMessage(message) {
 }
 
 function loadVideoToPlayer(url) {
+    if (!url) return;
+    
+    let videoUrl = url;
     let videoId = '';
-    const youtubeRegex = /(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+    
+    // YouTube
+    const youtubeRegex = /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/;
     const match = url.match(youtubeRegex);
+    
     if (match) {
         videoId = match[1];
-        videoFrame.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+        videoUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&modestbranding=1&rel=0`;
+        videoFrame.src = videoUrl;
+        console.log('YouTube видео загружено:', videoId);
     } else {
+        // Пробуем как прямую ссылку
         videoFrame.src = url;
+        console.log('Прямая ссылка загружена:', url);
     }
 }
 
