@@ -9,7 +9,6 @@
 </head>
 <body>
     <div class="app-container">
-        <!-- Левая боковая панель -->
         <aside class="sidebar">
             <div class="logo">
                 <i class="fas fa-bolt"></i>
@@ -17,43 +16,30 @@
             </div>
             
             <div class="user-info">
-                <div class="avatar">
-                    <i class="fas fa-user"></i>
-                </div>
+                <div class="avatar"><i class="fas fa-user"></i></div>
                 <input type="text" id="userNameInput" class="user-name-input" placeholder="Ваше имя" value="Гость">
                 <button class="edit-name-btn" id="saveNameBtn"><i class="fas fa-check"></i></button>
             </div>
 
             <div class="connection-status" id="connectionStatus">
-                <i class="fas fa-circle"></i>
-                <span>Подключение...</span>
+                <i class="fas fa-circle"></i><span>Подключение...</span>
             </div>
 
             <div class="room-list">
                 <h3><i class="fas fa-video"></i> Комнаты</h3>
-                <div id="roomsContainer">
-                    <div class="loading-spinner"></div>
-                </div>
-                <button class="create-room-btn" id="createRoomBtn">
-                    <i class="fas fa-plus"></i> Создать комнату
-                    <button class="invite-btn" id="inviteBtn" style="display: none; margin-top: 10px;">
-    <i class="fas fa-user-plus"></i> Пригласить
-</button>
-                </button>
+                <div id="roomsContainer"><div class="loading-spinner"></div></div>
+                <button class="create-room-btn" id="createRoomBtn"><i class="fas fa-plus"></i> Создать комнату</button>
+                <button class="invite-btn" id="inviteBtn" style="display: none; margin-top: 10px;"><i class="fas fa-user-plus"></i> Пригласить</button>
             </div>
 
             <div class="online-users">
                 <h3><i class="fas fa-users"></i> В комнате (<span id="memberCount">0</span>)</h3>
                 <div id="onlineUsersList"></div>
-                <button class="leave-room-btn" id="leaveRoomBtn" style="display: none;">
-                    <i class="fas fa-sign-out-alt"></i> Выйти из комнаты
-                </button>
+                <button class="leave-room-btn" id="leaveRoomBtn" style="display: none;"><i class="fas fa-sign-out-alt"></i> Выйти</button>
             </div>
         </aside>
 
-        <!-- Основная область с видео и чатом -->
         <main class="main-content">
-            <!-- Видео область -->
             <div class="video-section">
                 <div class="video-container" id="videoContainer">
                     <div class="no-room-message" id="noRoomMessage">
@@ -64,7 +50,6 @@
                     <iframe id="videoFrame" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                 </div>
                 
-                <!-- Панель управления видео -->
                 <div class="video-controls" id="videoControls" style="display: none;">
                     <div class="video-url-input">
                         <input type="text" id="videoUrlInput" placeholder="Вставьте ссылку на YouTube">
@@ -73,13 +58,9 @@
                 </div>
             </div>
 
-            <!-- Чат внизу -->
             <div class="chat-section">
                 <div class="chat-header">
                     <h3><i class="fas fa-comment-dots"></i> Чат комнаты</h3>
-                    <button class="chat-toggle-btn" id="chatToggleBtn">
-                        <i class="fas fa-chevron-down"></i>
-                    </button>
                 </div>
                 <div class="chat-messages" id="chatMessages">
                     <div class="system-message">✨ Добро пожаловать! Создайте или присоединитесь к комнате.</div>
@@ -92,7 +73,6 @@
         </main>
     </div>
 
-    <!-- Модальные окна -->
     <div class="modal" id="createRoomModal">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
@@ -113,8 +93,6 @@
                 <input type="text" id="inviteLinkInput" readonly>
                 <button id="copyInviteBtn"><i class="fas fa-copy"></i> Копировать</button>
             </div>
-            <p>Код комнаты:</p>
-            <div class="room-code-display" id="modalRoomCode"></div>
         </div>
     </div>
 
