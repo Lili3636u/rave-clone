@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>🎬 Rave Clone — Смотрите видео вместе с друзьями</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Боковая панель -->
+        <aside class="sidebar" id="sidebar">
+            <div class="logo">
+                <i class="fas fa-bolt"></i>
+                <span>Rave<span class="highlight">Clone</span></span>
+            </div>
+            
+            <div class="user-info">
+                <div class="avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <input type="text" id="userNameInput" class="user-name-input" placeholder="Ваше имя" maxlength="30" value="Гость">
+                <button class="edit-name-btn" id="saveNameBtn"><i class="fas fa-check"></i></button>
+            </div>
+
+            <div class="connection-status" id="connectionStatus">
+                <i class="fas fa-circle"></i>
+                <span>Подключение...</span>
+            </div>
+
+            <div class="room-list">
+                <h3><i class="fas fa-video"></i> Комнаты</h3>
+                <div id="roomsContainer">
+                    <div class="loading-spinner"></div>
+                </div>
+                <button class="create-room-btn" id="createRoomBtn">
+                    <i class="fas fa-plus"></i> Создать комнату
+                </button>
+            </div>
+
+            <div class="online-users">
+                <h3><i class="fas fa-users"></i> В комнате (<span id="memberCount">0</span>)</h3>
+                <div id="onlineUsersList"></div>
+            </div>
+        </aside>
+
+        <!-- Основная область -->
+        <main class="main-content">
+            <header class="main-header">
+                <button class="menu-toggle" id="menuToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="room-info">
+                    <h2 id="currentRoomName">🎬 Выберите комнату</h2>
+                    <div class="room-code-container" id="roomCodeContainer" style="display: none;">
+                        <span class="room-code-label">Код комнаты:</span>
+                        <span class="room-code" id="roomCode"></span>
+                        <button class="copy-code-btn" id="copyCodeBtn"><i class="fas fa-copy"></i></button>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <button class="invite-btn" id="inviteBtn" style="display: none;">
+                        <i class="fas fa-user-plus"></i> Пригласить
+                    </button>
+                    <button class="leave-room-btn" id="leaveRoomBtn" style="display: none;">
+                        <i class="fas fa-sign-out-alt"></i> Выйти
+                    </button>
+                </div>
+            </header>
+
+            <!-- Видеоплеер -->
+            <div class="video-container">
+                <div class="no-room-message" id="noRoomMessage">
+                    <i class="fas fa-tv"></i>
+                    <h3>Добро пожаловать в Rave Clone!</h3>
+                    <p>Создайте комнату или присоединитесь по ссылке от друга</p>
+                    <div class="feature-list">
+                        <div class="feature"><i class="fas fa-check-circle"></i> Синхронный просмотр</div>
+                        <div class="feature"><i class="fas fa-check-circle"></i> Встроенный чат</div>
+                        <div class="feature"><i class="fas fa-check-circle"></i> YouTube & Twitch</div>
+                        <div class="feature"><i class="fas fa-check-circle"></i> Любые видео</div>
+                    </div>
+                </div>
+                <iframe id="videoFrame" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+
+            <!-- Панель управления -->
+            <div class="video-controls" id="videoControls" style="display: none;">
+                <div class="video-url-input">
+                    <input type="text" id="videoUrlInput" placeholder="Вставьте ссылку на YouTube, Twitch или .mp4 видео">
+                    <button id="loadVideoBtn"><i class="fas fa-play"></i> Загрузить</button>
+                </div>
+                <div class="video-info" id="videoInfo"></div>
+            </div>
+
+            <!-- Чат -->
+            <div class="chat-container">
+                <div class="chat-header">
+                    <h3><i class="fas fa-comment-dots"></i> Чат комнаты</h3>
+                    <button class="chat-toggle" id="chatToggle">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                </div>
+                <div class="chat-messages" id="chatMessages">
+                    <div class="system-message">✨ Добро пожаловать! Создайте или присоединитесь к комнате.</div>
+                </div>
+                <div class="chat-input-area">
+                    <input type="text" id="chatInput" placeholder="Напишите сообщение..." disabled>
+                    <button id="sendBtn" disabled><i class="fas fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Модальные окна -->
+    <div class="modal" id="createRoomModal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <i class="fas fa-plus-circle modal-icon"></i>
+            <h2>Создание комнаты</h2>
+            <input type="text" id="roomNameInput" placeholder="Название комнаты" maxlength="50">
+            <button id="confirmCreateRoom">Создать комнату</button>
+        </div>
+    </div>
+
+    <div class="modal" id="inviteModal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <i class="fas fa-link modal-icon"></i>
+            <h2>Пригласить друзей</h2>
+            <p>Поделитесь ссылкой:</p>
+            <div class="invite-link-container">
+                <input type="text" id="inviteLinkInput" readonly>
+                <button id="copyInviteBtn"><i class="fas fa-copy"></i> Копировать</button>
+            </div>
+            <p>Или код комнаты:</p>
+            <div class="room-code-display" id="modalRoomCode"></div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

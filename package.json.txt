@@ -1,0 +1,16 @@
+{
+  "name": "rave-clone-global",
+  "version": "1.0.0",
+  "description": "Совместный просмотр видео с друзьями из любой точки мира",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.5.4"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
